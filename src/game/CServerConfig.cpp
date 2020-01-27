@@ -167,7 +167,7 @@ CServerConfig::CServerConfig()
 	m_iMaxPolyStats			= 150;
 	m_iRacialFlags			= 0;
 	m_iRevealFlags			= (REVEALF_DETECTINGHIDDEN|REVEALF_LOOTINGSELF|REVEALF_LOOTINGOTHERS|REVEALF_SPEAK|REVEALF_SPELLCAST);
-
+	m_fDisplayPercentAr = false;
 	m_fNoResRobe		= 0;
 	m_iLostNPCTeleport	= 50;
     m_iAutoProcessPriority = 0;
@@ -462,6 +462,7 @@ enum RC_TYPE
 	RC_DEBUGFLAGS,
 	RC_DECAYTIMER,
 	RC_DEFAULTCOMMANDLEVEL,		//m_iDefaultCommandLevel
+	RC_DISPLAYPERCENTAR,	    //m_fDisplayPercentAr
 	RC_DISTANCETALK,
 	RC_DISTANCEWHISPER,
 	RC_DISTANCEYELL,
@@ -707,6 +708,7 @@ const CAssocReg CServerConfig::sm_szLoadKeys[RC_QTY+1] =
 	{ "DEBUGFLAGS",				{ ELEM_MASK_INT,OFFSETOF(CServerConfig,m_iDebugFlags),			0 }},
 	{ "DECAYTIMER",				{ ELEM_INT,		OFFSETOF(CServerConfig,m_iDecay_Item),			0 }},
 	{ "DEFAULTCOMMANDLEVEL",	{ ELEM_INT,		OFFSETOF(CServerConfig,m_iDefaultCommandLevel),	0 }},
+	{ "DISPLAYARMORASPERCENT",  { ELEM_BOOL,    OFFSETOF(CServerConfig,m_fDisplayPercentAr),    0 }},
 	{ "DISTANCETALK",			{ ELEM_INT,		OFFSETOF(CServerConfig,m_iDistanceTalk ),		0 }},
 	{ "DISTANCEWHISPER",		{ ELEM_INT,		OFFSETOF(CServerConfig,m_iDistanceWhisper ),	0 }},
 	{ "DISTANCEYELL",			{ ELEM_INT,		OFFSETOF(CServerConfig,m_iDistanceYell ),		0 }},
@@ -2835,9 +2837,13 @@ bool CServerConfig::LoadResourceSection( CScript * pScript )
 		// Stat advance rates.
 		while ( pScript->ReadKeyParse())
 		{
-			int i = FindStatKey( pScript->GetKey());
-			if ( i >= STAT_BASE_QTY )
+			lpctstr ptcKey = pScript->GetKey();
+			STAT_TYPE i = FindStatKey(ptcKey);
+			if ((i <= STAT_NONE) || (i >= STAT_BASE_QTY))
+			{
+				g_Log.EventError("Invalid keyword '%s'.\n", ptcKey);
 				continue;
+			}
 			m_StatAdv[i].Load( pScript->GetArgStr());
 		}
 		return true;
@@ -2847,7 +2853,7 @@ bool CServerConfig::LoadResourceSection( CScript * pScript )
 			tchar* ipBuffer = Str_GetTemp();
 			while ( pScript->ReadKeyParse())
 			{
-				strcpy(ipBuffer, pScript->GetKey());
+				strncpy(ipBuffer, pScript->GetKey(), STR_TEMPLENGTH);
 				HistoryIP& history = g_NetworkManager.getIPHistoryManager().getHistoryForIP(ipBuffer);
 				history.setBlocked(true);
 			}
@@ -3461,7 +3467,7 @@ bool CServerConfig::LoadResourceSection( CScript * pScript )
 
 	case RES_STARTS:
 		{
-			int iStartVersion = pScript->GetArgVal();
+			const int iStartVersion = pScript->GetArgVal();
 			m_StartDefs.clear();
 			while ( pScript->ReadKey())
 			{
@@ -3475,10 +3481,10 @@ bool CServerConfig::LoadResourceSection( CScript * pScript )
 					if (iStartVersion == 2)
 					{
 						if ( pScript->ReadKey())
-							pStart->iClilocDescription = atoi(pScript->GetKey());
+							pStart->iClilocDescription = Str_ToI(pScript->GetKey());
 					}
 				}
-				m_StartDefs.push_back(pStart);
+				m_StartDefs.emplace_back(pStart);
 			}
 
 			return true;

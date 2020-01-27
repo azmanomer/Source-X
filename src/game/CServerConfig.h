@@ -306,10 +306,10 @@ public:
 	int  m_iCombatHitChanceEra;		// define hit chance formula to use on physical combat.
 	int  m_iCombatSpeedEra;			// define swing speed formula to use on physical combat.
 	int  m_iSpeedScaleFactor;		// fight skill delay = m_iSpeedScaleFactor / ( (dex + 100) * Weapon Speed ).
-    uint m_iCombatParryingEra;     // Parrying behaviour flags
-
+    uint m_iCombatParryingEra;      // Parrying behaviour flags
 	int  m_iSkillPracticeMax;		// max skill level a player can practice on dummies/targets upto.
 	bool m_iPacketDeathAnimation;	// packet 02c
+    bool m_fDisplayPercentAr;       // Display the ARMOR value in the tooltip as the % 
 
 	// Flags for controlling pvp/pvm behaviour of players
 	uint m_iCombatFlags;   // combat flags
@@ -547,7 +547,7 @@ public:
 	CRegionLinks m_RegionDefs;		// All [REGION ] stored inside.
 
 	// static definition stuff from *TABLE.SCP mostly.
-	CSObjArray< const CStartLoc* > m_StartDefs;			// Start points list
+    CSObjArray<CStartLoc *> m_StartDefs;    // Start points list
     CValueCurveDef m_StatAdv[STAT_BASE_QTY];			// "skill curve"
 	CSTypedArray<CPointMap> m_MoonGates;	// The array of moongates.
 
